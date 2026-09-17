@@ -1,0 +1,74 @@
+# git-cliff 配置 —— 从 Conventional Commits 生成 CHANGELOG.md
+# https://git-cliff.org/docs/configuration
+
+[changelog]
+# `--prepend` 用它定位上一次生成的头部并替换掉。
+header_marker = "<!-- git-cliff: end of header -->"
+header = """# 更新日志
+
+本项目所有值得注意的变更都记录在此文件。
+
+格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
+提交信息遵循 [Conventional Commits](https://www.conventionalcommits.org/zh-hans/)，
+版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
+
+<!-- git-cliff: end of header -->
+"""
+# 每个版本渲染一次的 Tera 模板。
+# https://keats.github.io/tera/docs/#getting-started
+body = """
+{% if version %}\
+    ## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}\
+    ## [未发布]
+{% endif %}\
+{% for entry in commits | commit_groups(groups=commit_parsers_groups) %}
+    ### {{ entry.group }}
+    {% for commit in entry.commits %}
+        - {% if commit.scope %}**{{ commit.scope }}**：{% endif %}\
+            {% if commit.breaking %}**[破坏性变更]** {% endif %}\
+            {{ commit.message | upper_first }}（[{{ commit.id | truncate(length=7, end="") }}](<REPO>/commit/{{ commit.id }})）\
+    {% endfor %}
+{% endfor %}
+"""
+# 去掉正文首尾空白。
+trim = true
+# 没有任何 release 时也渲染，方便尚未打标签时预览 [未发布] 段。
+render_always = true
+# 后处理：把模板里的占位符换成真实仓库地址。
+postprocessors = [
+    { pattern = '<REPO>', replace = "https://github.com/w1718w/STS2-GameplayConfigSync" },
+]
+
+[git]
+# 按 Conventional Commits 解析提交信息。
+# https://www.conventionalcommits.org
+conventional_commits = true
+# 不丢弃不符合规范的提交，而是让它们落到「其他」分组。
+# 写漏前缀时改动仍会出现在更新日志里，看得见、好补；静默消失才是真麻烦。
+filter_unconventional = false
+split_commits = false
+protect_breaking_commits = false
+# 分组顺序即下面的数组顺序。
+commit_parsers = [
+    { message = "^feat", group = "新增" },
+    { message = "^fix", group = "修复" },
+    { message = "^perf", group = "性能" },
+    { message = "^refactor", group = "重构" },
+    { message = "^build", group = "构建" },
+    { message = "^doc", group = "文档" },
+    { message = "^test", group = "测试" },
+    { message = "^style", group = "样式" },
+    { message = "^revert", group = "回退" },
+    # 纯构建/发布流程的提交不进更新日志。
+    { message = "^chore|^ci", skip = true },
+    { message = ".*", group = "其他" },
+]
+filter_commits = false
+link_parsers = []
+use_branch_tags = false
+topo_order = false
+topo_order_commits = true
+sort_commits = "oldest"
+# 只认 v 开头的版本标签，避免将来别的用途的标签被当成发行版。
+tag_pattern = "v[0-9]*"

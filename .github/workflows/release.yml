@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # git-cliff 要遍历完整历史才能生成更新说明。
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      # tag 是「已发布版本」的权威来源，manifest 是加载器读的版本。
+      # 两者对不上说明打错了 tag，直接拦住，别发出一个版本号自相矛盾的 release。
+      - name: 校验 tag 与 manifest 版本一致
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          manifest="$(grep -oP '"version"\s*:\s*"\K[^"]+' GameplayConfigSync.json | head -1)"
+          echo "tag=$tag manifest=$manifest"
+          if [ "$tag" != "$manifest" ]; then
+            echo "::error::标签 $GITHUB_REF_NAME 与 manifest version ($manifest) 不一致"
+            exit 1
+          fi
+
+      - name: 构建
+        run: dotnet build -c Release
+
+      - name: 生成更新说明
+        id: cliff
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: --latest --strip header
+
+      - name: 发布
+        uses: softprops/action-gh-release@v2
+        with:
+          body: ${{ steps.cliff.outputs.content }}
+          files: dist/*

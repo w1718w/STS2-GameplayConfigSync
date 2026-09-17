@@ -1,0 +1,43 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      # 版本号写在两个地方：manifest（加载器读）和 csproj（DLL 元数据）。
+      # 与其靠记忆同步，不如让它不一致时直接构建失败。
+      - name: 校验 manifest 与 csproj 的版本号一致
+        run: |
+          manifest="$(grep -oP '"version"\s*:\s*"\K[^"]+' GameplayConfigSync.json | head -1)"
+          project="$(dotnet msbuild GameplayConfigSync.csproj -getProperty:Version)"
+          echo "manifest=$manifest csproj=$project"
+          if [ "$manifest" != "$project" ]; then
+            echo "::error::GameplayConfigSync.json 的 version ($manifest) 与 csproj 的 Version ($project) 不一致"
+            exit 1
+          fi
+
+      # 托管 runner 上没有游戏安装，sts2.dll 不存在，
+      # 工程会自动回落到 NuGet 参考程序集（BSchneppe.Sts2.ReferenceAssemblies）。
+      - name: 构建
+        run: dotnet build -c Release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GameplayConfigSync
+          path: dist/
+          if-no-files-found: error

@@ -1,0 +1,79 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- 与 NuGet 参考程序集、BaseLib 包一致；游戏运行时也是 net9.0。 -->
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <AssemblyName>GameplayConfigSync</AssemblyName>
+    <RootNamespace>GameplayConfigSync</RootNamespace>
+    <!--
+      程序集版本。游戏和加载器读的是 GameplayConfigSync.json 里的 version，
+      这个只影响 DLL 的元数据（谁要是直接看 DLL 属性时不至于看到 1.0.0.0）。
+      CI 里有一道校验，会和 manifest 的 version 对比，不一致就构建失败。
+    -->
+    <Version>0.3.0</Version>
+    <!-- 游戏侧依赖由运行时提供，不复制进产物。 -->
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <!-- 与 CI 一致的可复现构建。 -->
+    <Deterministic>true</Deterministic>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      CI（以及任何没装游戏的机器）：sts2.dll 不存在，回落到 NuGet 参考程序集。
+      这些是只有类型签名、没有实现代码的 stub，专为 CI 编译准备。
+      版本号跟游戏版本对齐 —— 换游戏版本时这里要跟着改，
+      GameplayConfigSync.json 里的 min_game_version 同理。
+    -->
+    <PackageReference Include="BSchneppe.Sts2.ReferenceAssemblies"
+                      Version="0.111.0-beta-41cef1ea"
+                      Condition="!Exists('$(STS2GameDir)/sts2.dll')"
+                      PrivateAssets="All" />
+
+    <!--
+      BaseLib：仅编译期引用。运行时不打包进来 ——
+      游戏会从创意工坊加载玩家实际安装的那一份，重复打包会导致加载冲突。
+    -->
+    <PackageReference Include="Alchyr.Sts2.BaseLib" Version="3.4.7">
+      <PrivateAssets>all</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- 本地开发：优先引用游戏安装目录里的真实 DLL。 -->
+  <ItemGroup Condition="Exists('$(STS2GameDir)/sts2.dll')">
+    <Reference Include="sts2">
+      <HintPath>$(STS2GameDir)/sts2.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(STS2GameDir)/0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="GodotSharp">
+      <HintPath>$(STS2GameDir)/GodotSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!--
+    打包成可直接安装的本地 Mod：dist/ 下放 dll + manifest。
+    两个文件齐了才算一个能装的 Mod。
+  -->
+  <Target Name="PackageMod" AfterTargets="Build">
+    <PropertyGroup>
+      <ModDistDir>$(MSBuildProjectDirectory)/dist/</ModDistDir>
+    </PropertyGroup>
+    <MakeDir Directories="$(ModDistDir)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModDistDir)" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)/GameplayConfigSync.json" DestinationFolder="$(ModDistDir)" />
+    <ItemGroup>
+      <_PackagedFile Include="$(ModDistDir)*" />
+    </ItemGroup>
+    <Message Importance="high" Text="已打包: @(_PackagedFile->'%(Filename)%(Extension)')" />
+  </Target>
+
+</Project>

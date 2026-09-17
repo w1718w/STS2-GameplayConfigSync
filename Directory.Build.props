@@ -1,0 +1,17 @@
+<Project>
+
+  <!--
+    游戏程序集所在目录。
+
+    本地开发：只要这个路径下存在 sts2.dll，就引用游戏安装目录里的真实 DLL
+    （IntelliSense 和调试体验更好）。
+    CI：GitHub 上没有游戏安装，sts2.dll 不存在，工程会自动回落到 NuGet 上的
+    BSchneppe.Sts2.ReferenceAssemblies（只有元数据、无游戏代码的引用程序集）。
+
+    游戏装在别处的话改这里，或命令行覆盖：dotnet build -p:STS2GameDir="D:/path"。
+  -->
+  <PropertyGroup>
+    <STS2GameDir Condition="'$(STS2GameDir)' == ''">C:/Program Files (x86)/Steam/steamapps/common/Slay the Spire 2/data_sts2_windows_x86_64</STS2GameDir>
+  </PropertyGroup>
+
+</Project>
