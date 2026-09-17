@@ -46,4 +46,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           body: ${{ steps.cliff.outputs.content }}
-          files: dist/*
+          # 产物在 dist/GameplayConfigSync/ 下；附件按文件名平铺上传，
+          # 下载者拿到的仍是 GameplayConfigSync.dll / .json 两个文件。
+          files: dist/GameplayConfigSync/*

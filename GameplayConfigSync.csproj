@@ -60,12 +60,15 @@
   </ItemGroup>
 
   <!--
-    打包成可直接安装的本地 Mod：dist/ 下放 dll + manifest。
-    两个文件齐了才算一个能装的 Mod。
+    打包成可直接安装的本地 Mod。
+
+    刻意套一层以 Mod ID 命名的目录：游戏既要求 mods/GameplayConfigSync/ 这种结构，
+    创意工坊的 content 也是同样的嵌套。这样编译完把整个目录拷进 mods/ 就是一个
+    能装、且在游戏内模组列表里能看到的 Mod，不需要再手工建目录拼文件。
   -->
   <Target Name="PackageMod" AfterTargets="Build">
     <PropertyGroup>
-      <ModDistDir>$(MSBuildProjectDirectory)/dist/</ModDistDir>
+      <ModDistDir>$(MSBuildProjectDirectory)/dist/GameplayConfigSync/</ModDistDir>
     </PropertyGroup>
     <MakeDir Directories="$(ModDistDir)" />
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModDistDir)" />
