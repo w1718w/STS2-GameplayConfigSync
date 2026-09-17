@@ -59,6 +59,7 @@ RitsuLib 目前并未提供"临时写入且不持久化"的通用公开操作。
 - `.github/workflows/` —— 推送时构建，打标签时自动发布。
 - `cliff.toml` —— 更新日志的生成配置。
 - `docs/` —— 设计、安全、研究与测试笔记。
+- `AGENTS.md` —— 给 AI 编码代理的仓库说明：构建机制、硬性约定、发版流程。
 - `dist/GameplayConfigSync/` —— 构建产物；有意排除在 Git 之外。
 
 ## 构建

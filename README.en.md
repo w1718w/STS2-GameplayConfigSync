@@ -59,6 +59,7 @@ See the [research notes](docs/RESEARCH.md) for the evidence / source inventory a
 - `.github/workflows/` — builds on push, publishes on tag.
 - `cliff.toml` — changelog generation config.
 - `docs/` — design, safety, research, and test notes.
+- `AGENTS.md` — repository instructions for AI coding agents: build mechanics, hard rules, release flow.
 - `dist/GameplayConfigSync/` — build output; intentionally excluded from Git.
 
 ## Build
