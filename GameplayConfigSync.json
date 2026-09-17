@@ -1,0 +1,17 @@
+{
+  "id": "GameplayConfigSync",
+  "name": "Gameplay Config Sync / 联机玩法配置同步",
+  "author": "WANGao + Codex",
+  "description": "Temporarily mirrors only other gameplay mods' registered configuration when both peers advertise a compatible protocol; remains inert when installed on one side only.",
+  "version": "0.3.0",
+  "has_pck": false,
+  "has_dll": true,
+  "affects_gameplay": false,
+  "min_game_version": "0.111.0",
+  "dependencies": [
+    {
+      "id": "BaseLib",
+      "min_version": "3.4.7"
+    }
+  ]
+}

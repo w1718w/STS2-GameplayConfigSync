@@ -1,0 +1,13 @@
+# Local build and runtime output
+dist/
+logs/
+
+# IDE / OS files
+.vs/
+.vscode/
+bin/
+obj/
+*.user
+*.suo
+.DS_Store
+Thumbs.db
