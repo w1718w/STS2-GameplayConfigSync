@@ -59,7 +59,7 @@ RitsuLib 目前并未提供"临时写入且不持久化"的通用公开操作。
 - `.github/workflows/` —— 推送时构建，打标签时自动发布。
 - `cliff.toml` —— 更新日志的生成配置。
 - `docs/` —— 设计、安全、研究与测试笔记。
-- `dist/` —— 构建产物；有意排除在 Git 之外。
+- `dist/GameplayConfigSync/` —— 构建产物；有意排除在 Git 之外。
 
 ## 构建
 
@@ -67,7 +67,7 @@ RitsuLib 目前并未提供"临时写入且不持久化"的通用公开操作。
 dotnet build -c Release
 ```
 
-产物落在 `dist/`，含 `GameplayConfigSync.dll` 与 `GameplayConfigSync.json` 两个文件。把它们放进游戏的 `mods/GameplayConfigSync/` 目录即可。
+产物落在 `dist/GameplayConfigSync/`，含 `GameplayConfigSync.dll` 与 `GameplayConfigSync.json`。把整个目录拷进游戏的 `mods/` 下即可，最终路径为 `mods/GameplayConfigSync/`。
 
 本地构建默认引用你机器上安装的游戏程序集，路径在 `Directory.Build.props`；游戏装在别处就用 `dotnet build -c Release -p:STS2GameDir="D:/你的路径"` 覆盖。没装游戏的机器 —— 包括 CI —— 会自动改用 NuGet 上只有元数据的编译用参考程序集，因此不需要游戏也能构建。
 

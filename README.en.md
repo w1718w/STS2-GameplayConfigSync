@@ -59,7 +59,7 @@ See the [research notes](docs/RESEARCH.md) for the evidence / source inventory a
 - `.github/workflows/` — builds on push, publishes on tag.
 - `cliff.toml` — changelog generation config.
 - `docs/` — design, safety, research, and test notes.
-- `dist/` — build output; intentionally excluded from Git.
+- `dist/GameplayConfigSync/` — build output; intentionally excluded from Git.
 
 ## Build
 
@@ -67,7 +67,7 @@ See the [research notes](docs/RESEARCH.md) for the evidence / source inventory a
 dotnet build -c Release
 ```
 
-The output lands in `dist/` as `GameplayConfigSync.dll` and `GameplayConfigSync.json`. Copy both into the game's `mods/GameplayConfigSync/` directory.
+The output lands in `dist/GameplayConfigSync/` as `GameplayConfigSync.dll` and `GameplayConfigSync.json`. Copy that whole folder into the game's `mods/` directory; the result is `mods/GameplayConfigSync/`.
 
 Local builds reference the game assemblies from your own installation, located via `Directory.Build.props`; override with `dotnet build -c Release -p:STS2GameDir="D:/your/path"` when the game lives elsewhere. On machines without the game — including CI — the build automatically falls back to metadata-only reference assemblies from NuGet, so no game installation is required.
 
