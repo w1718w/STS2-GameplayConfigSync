@@ -7,6 +7,16 @@
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
 <!-- git-cliff: end of header -->
+## [未发布]
+
+### 构建
+
+- 产物改为嵌套目录，与 mods/ 安装结构一致（[9187d0e](https://github.com/w1718w/STS2-GameplayConfigSync/commit/9187d0eeea7d73177c4a68daec320021fc772263)）
+
+### 文档
+
+- 更新构建产物的路径说明（[bafdf85](https://github.com/w1718w/STS2-GameplayConfigSync/commit/bafdf85d48ef282a5c120747812a423ea1df97dd)）
+
 ## [0.3.0] - 2026-09-17
 
 ### 新增
