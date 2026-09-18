@@ -12,7 +12,7 @@
       这个只影响 DLL 的元数据（谁要是直接看 DLL 属性时不至于看到 1.0.0.0）。
       CI 里有一道校验，会和 manifest 的 version 对比，不一致就构建失败。
     -->
-    <Version>0.3.0</Version>
+    <Version>0.4.0-beta.1</Version>
     <!-- 游戏侧依赖由运行时提供，不复制进产物。 -->
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>

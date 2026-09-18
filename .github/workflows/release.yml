@@ -20,15 +20,16 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      # tag 是「已发布版本」的权威来源，manifest 是加载器读的版本。
-      # 两者对不上说明打错了 tag，直接拦住，别发出一个版本号自相矛盾的 release。
-      - name: 校验 tag 与 manifest 版本一致
+      # tag 是「已发布版本」的权威来源。加载器、DLL 元数据和运行时能力标记必须与它一致。
+      - name: 校验 tag 与包内版本一致
         run: |
           tag="${GITHUB_REF_NAME#v}"
           manifest="$(grep -oP '"version"\s*:\s*"\K[^"]+' GameplayConfigSync.json | head -1)"
-          echo "tag=$tag manifest=$manifest"
-          if [ "$tag" != "$manifest" ]; then
-            echo "::error::标签 $GITHUB_REF_NAME 与 manifest version ($manifest) 不一致"
+          project="$(dotnet msbuild GameplayConfigSync.csproj -getProperty:Version)"
+          runtime="$(grep -oP 'public const string Version = "\K[^"]+' src/Main.cs | head -1)"
+          echo "tag=$tag manifest=$manifest csproj=$project runtime=$runtime"
+          if [ "$tag" != "$manifest" ] || [ "$tag" != "$project" ] || [ "$tag" != "$runtime" ]; then
+            echo "::error::标签、manifest、csproj 与运行时版本不一致"
             exit 1
           fi
 
@@ -46,6 +47,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           body: ${{ steps.cliff.outputs.content }}
+          prerelease: ${{ contains(github.ref_name, '-') }}
           # 产物在 dist/GameplayConfigSync/ 下；附件按文件名平铺上传，
           # 下载者拿到的仍是 GameplayConfigSync.dll / .json 两个文件。
           files: dist/GameplayConfigSync/*

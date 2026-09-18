@@ -87,10 +87,11 @@ When updating the supported game version, update both:
 
 ## Versioning and documentation
 
-The mod version exists in exactly two places and must match:
+The mod version exists in exactly three places and must match:
 
 - `GameplayConfigSync.json` → `version` (authoritative)
 - `GameplayConfigSync.csproj` → `<Version>` (assembly metadata)
+- `src/Main.cs` → `Main.Version` (runtime capability and log metadata)
 
 CI rejects mismatches. Do not add a hard-coded version to README prose; the badges already cover mod and game versions.
 

@@ -7,31 +7,27 @@
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
 <!-- git-cliff: end of header -->
-## [未发布]
+## [0.4.0-beta.1] - 2026-09-18
+
+> 预发布版：已通过 Release 编译，尚未完成本版本的双端实机回归测试。
+
+### 新增
+
+- 为游戏内配置加入简体中文本地化（[eaed958](https://github.com/w1718w/STS2-GameplayConfigSync/commit/eaed958938a76837cdcff03485517189d8518eeb)）
 
 ### 修复
 
 - 消除 LoadRunLobby 构造函数链导致的重复挂载（[b1d57cb](https://github.com/w1718w/STS2-GameplayConfigSync/commit/b1d57cba79d48acbc69bfc8c0d42fec2542a81d8)）
+- 日志改为每次游戏会话单独写入，并使用本地时间（[2cde6fe](https://github.com/w1718w/STS2-GameplayConfigSync/commit/2cde6fe2f296e17a2e9d091c60afe1a74d6fef23)）
 
-### 构建
+### 重构
 
-- 产物改为嵌套目录，与 mods/ 安装结构一致（[9187d0e](https://github.com/w1718w/STS2-GameplayConfigSync/commit/9187d0eeea7d73177c4a68daec320021fc772263)）
+- 按职责拆分同步器源码，保持编译产物行为一致（[a0bea24](https://github.com/w1718w/STS2-GameplayConfigSync/commit/a0bea249d8ef2c7c11e57b60fa10307732d9089a)）
 
-### 文档
+### 构建与文档
 
-- 更新构建产物的路径说明（[bafdf85](https://github.com/w1718w/STS2-GameplayConfigSync/commit/bafdf85d48ef282a5c120747812a423ea1df97dd)）
-- 加入 AGENTS.md 与 CLAUDE.md 导入入口（[60547c6](https://github.com/w1718w/STS2-GameplayConfigSync/commit/60547c65c8a079921a44bbf68411ff68ced78c64)）
-- 仓库结构中登记 AGENTS.md（[203a68a](https://github.com/w1718w/STS2-GameplayConfigSync/commit/203a68a0d1f508dbb5eb9b38a1eee4f14d1f65fd)）
-
-## [未发布]
-
-### 构建
-
-- 产物改为嵌套目录，与 mods/ 安装结构一致（[9187d0e](https://github.com/w1718w/STS2-GameplayConfigSync/commit/9187d0eeea7d73177c4a68daec320021fc772263)）
-
-### 文档
-
-- 更新构建产物的路径说明（[bafdf85](https://github.com/w1718w/STS2-GameplayConfigSync/commit/bafdf85d48ef282a5c120747812a423ea1df97dd)）
+- 产物改为与 Mod 安装结构一致的嵌套目录。
+- 重写仓库协作指南，并补充构建与发布约定。
 
 ## [0.3.0] - 2026-09-17
 

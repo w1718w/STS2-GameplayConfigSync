@@ -19,15 +19,16 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      # 版本号写在两个地方：manifest（加载器读）和 csproj（DLL 元数据）。
+      # 版本号写在三个地方：manifest、csproj 和运行时能力标记。
       # 与其靠记忆同步，不如让它不一致时直接构建失败。
-      - name: 校验 manifest 与 csproj 的版本号一致
+      - name: 校验三处版本号一致
         run: |
           manifest="$(grep -oP '"version"\s*:\s*"\K[^"]+' GameplayConfigSync.json | head -1)"
           project="$(dotnet msbuild GameplayConfigSync.csproj -getProperty:Version)"
-          echo "manifest=$manifest csproj=$project"
-          if [ "$manifest" != "$project" ]; then
-            echo "::error::GameplayConfigSync.json 的 version ($manifest) 与 csproj 的 Version ($project) 不一致"
+          runtime="$(grep -oP 'public const string Version = "\K[^"]+' src/Main.cs | head -1)"
+          echo "manifest=$manifest csproj=$project runtime=$runtime"
+          if [ "$manifest" != "$project" ] || [ "$manifest" != "$runtime" ]; then
+            echo "::error::manifest ($manifest)、csproj ($project) 与运行时版本 ($runtime) 不一致"
             exit 1
           fi
 

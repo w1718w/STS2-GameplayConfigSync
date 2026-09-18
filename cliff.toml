@@ -51,6 +51,9 @@ split_commits = false
 protect_breaking_commits = false
 # 分组顺序即下面的数组顺序。
 commit_parsers = [
+    # 已废弃的未发布草稿与机械合并记录不属于用户可见变更。
+    { message = "^docs: 加入创意工坊文案草稿$", skip = true },
+    { message = "^Merge branch", skip = true },
     { message = "^feat", group = "新增" },
     { message = "^fix", group = "修复" },
     { message = "^perf", group = "性能" },
