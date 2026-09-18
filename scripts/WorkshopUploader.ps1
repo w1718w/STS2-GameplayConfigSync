@@ -14,6 +14,7 @@ $baseLibItemId = '3737335127'
 $manifestPath = Join-Path $repoRoot 'GameplayConfigSync.json'
 $projectPath = Join-Path $repoRoot 'GameplayConfigSync.csproj'
 $distRoot = Join-Path $repoRoot 'dist\GameplayConfigSync'
+$defaultPreviewPath = Join-Path (Split-Path $uploaderExe -Parent) 'template\image.png'
 $officialTags = @(
     'QoL', 'Utility', 'Misc', 'Tools & APIs', 'Cosmetics', 'Characters',
     'Cards', 'Relics', 'Potions', 'Events', 'Enemies', 'Bosses',
@@ -56,6 +57,7 @@ function Save-GuiSettings([string[]]$tags) {
     New-Item -ItemType Directory -Path $uploadRoot -Force | Out-Null
     [ordered]@{
         previewPath = $previewBox.Text
+        existingFilesRoot = $existingFilesBox.Text
         visibility = $visibilityBox.SelectedItem
         includeBaseLib = $baseLibCheck.Checked
         tags = $tags
@@ -63,44 +65,62 @@ function Save-GuiSettings([string[]]$tags) {
     } | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath $settingsPath -Encoding UTF8
 }
 
-function Prepare-Upload([bool]$performUpload) {
+function Prepare-Upload([bool]$performUpload, [bool]$buildFirst) {
     try {
         $uploadButton.Enabled = $false
         $prepareButton.Enabled = $false
+        $existingUploadButton.Enabled = $false
         $logBox.Clear()
 
         if (-not (Test-Path -LiteralPath $uploaderExe -PathType Leaf)) {
             throw "Official ModUploader.exe was not found: $uploaderExe"
         }
-        if (-not (Test-Path -LiteralPath $previewBox.Text -PathType Leaf)) {
-            throw '请选择要使用的 PNG 封面图。首次上传后会记住路径。'
-        }
-        if ([System.IO.Path]::GetExtension($previewBox.Text) -ne '.png') {
-            throw '封面图必须是 PNG 文件。'
-        }
-        if ((Get-Item -LiteralPath $previewBox.Text).Length -ge 1MB) {
-            throw '封面图必须小于 1 MB。'
-        }
         if ([string]::IsNullOrWhiteSpace($changeNoteBox.Text)) {
             throw '请填写本次更新说明。'
         }
 
-        $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
-        Add-Log ("准备 GameplayConfigSync {0}，Workshop Item {1}" -f $manifest.version, $workshopItemId)
-        Invoke-LoggedCommand 'dotnet' @('build', $projectPath, '-c', 'Release') $repoRoot
+        if ($buildFirst) {
+            Invoke-LoggedCommand 'dotnet' @('build', $projectPath, '-c', 'Release') $repoRoot
+            $sourceRoot = $distRoot
+        }
+        else {
+            $sourceRoot = $existingFilesBox.Text.Trim()
+            if (-not (Test-Path -LiteralPath $sourceRoot -PathType Container)) {
+                throw '请选择包含 GitHub Release 下载文件的文件夹。'
+            }
+        }
 
-        $dllPath = Join-Path $distRoot 'GameplayConfigSync.dll'
-        $jsonPath = Join-Path $distRoot 'GameplayConfigSync.json'
+        $dllPath = Join-Path $sourceRoot 'GameplayConfigSync.dll'
+        $jsonPath = Join-Path $sourceRoot 'GameplayConfigSync.json'
         if (-not (Test-Path -LiteralPath $dllPath -PathType Leaf) -or
             -not (Test-Path -LiteralPath $jsonPath -PathType Leaf)) {
-            throw '编译成功，但 dist 中缺少 DLL 或 manifest。'
+            throw '所选目录中必须同时存在 GameplayConfigSync.dll 和 GameplayConfigSync.json。'
         }
+
+        $manifest = Get-Content -LiteralPath $jsonPath -Raw | ConvertFrom-Json
+        if ($manifest.id -ne 'GameplayConfigSync') { throw '所选 manifest 不属于 GameplayConfigSync。' }
+        Add-Log ("准备 GameplayConfigSync {0}，Workshop Item {1}" -f $manifest.version, $workshopItemId)
 
         New-Item -ItemType Directory -Path $contentRoot -Force | Out-Null
         Get-ChildItem -LiteralPath $contentRoot -Force | Remove-Item -Recurse -Force
         Copy-Item -LiteralPath $dllPath -Destination $contentRoot
         Copy-Item -LiteralPath $jsonPath -Destination $contentRoot
-        Copy-Item -LiteralPath $previewBox.Text -Destination (Join-Path $uploadRoot 'image.png') -Force
+        $cachedPreviewPath = Join-Path $uploadRoot 'image.png'
+        if (-not [string]::IsNullOrWhiteSpace($previewBox.Text)) {
+            if (-not (Test-Path -LiteralPath $previewBox.Text -PathType Leaf)) { throw '所选封面图不存在。' }
+            if ([System.IO.Path]::GetExtension($previewBox.Text) -ne '.png') { throw '封面图必须是 PNG 文件。' }
+            if ((Get-Item -LiteralPath $previewBox.Text).Length -ge 1MB) { throw '封面图必须小于 1 MB。' }
+            Copy-Item -LiteralPath $previewBox.Text -Destination $cachedPreviewPath -Force
+            Add-Log '使用选择的封面图。'
+        }
+        elseif (Test-Path -LiteralPath $cachedPreviewPath -PathType Leaf) {
+            Add-Log '封面留空：复用上次上传的封面图。'
+        }
+        elseif (Test-Path -LiteralPath $defaultPreviewPath -PathType Leaf) {
+            Copy-Item -LiteralPath $defaultPreviewPath -Destination $cachedPreviewPath -Force
+            Add-Log '封面留空且无缓存：使用 Mega Crit 上传器的默认图。'
+        }
+        else { throw '找不到已缓存封面或 Mega Crit 默认封面。' }
         Set-Content -LiteralPath (Join-Path $uploadRoot 'mod_id.txt') -Value $workshopItemId -Encoding ASCII
 
         $tags = @(Get-SelectedTags)
@@ -131,6 +151,7 @@ function Prepare-Upload([bool]$performUpload) {
     finally {
         $uploadButton.Enabled = $true
         $prepareButton.Enabled = $true
+        $existingUploadButton.Enabled = $true
     }
 }
 
@@ -142,9 +163,9 @@ if (Test-Path -LiteralPath $settingsPath -PathType Leaf) {
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = 'GameplayConfigSync · STS2 创意工坊上传'
-$form.Size = New-Object System.Drawing.Size(780, 720)
+$form.Size = New-Object System.Drawing.Size(780, 790)
 $form.StartPosition = 'CenterScreen'
-$form.MinimumSize = New-Object System.Drawing.Size(780, 720)
+$form.MinimumSize = New-Object System.Drawing.Size(780, 790)
 $form.Font = New-Object System.Drawing.Font('Microsoft YaHei UI', 9)
 
 $itemLabel = New-Object System.Windows.Forms.Label
@@ -218,7 +239,7 @@ $form.Controls.Add($baseLibCheck)
 $previewLabel = New-Object System.Windows.Forms.Label
 $previewLabel.Location = New-Object System.Drawing.Point(18, 362)
 $previewLabel.Size = New-Object System.Drawing.Size(160, 22)
-$previewLabel.Text = 'PNG 封面图（< 1 MB）'
+$previewLabel.Text = 'PNG 封面图（可留空）'
 $form.Controls.Add($previewLabel)
 
 $previewBox = New-Object System.Windows.Forms.TextBox
@@ -237,35 +258,64 @@ $browseButton.Add_Click({
 })
 $form.Controls.Add($browseButton)
 
+$existingFilesLabel = New-Object System.Windows.Forms.Label
+$existingFilesLabel.Location = New-Object System.Drawing.Point(18, 422)
+$existingFilesLabel.Size = New-Object System.Drawing.Size(320, 22)
+$existingFilesLabel.Text = '已有发布文件目录（GitHub Release 下载件）'
+$form.Controls.Add($existingFilesLabel)
+
+$existingFilesBox = New-Object System.Windows.Forms.TextBox
+$existingFilesBox.Location = New-Object System.Drawing.Point(18, 446)
+$existingFilesBox.Size = New-Object System.Drawing.Size(650, 26)
+$form.Controls.Add($existingFilesBox)
+
+$existingFilesBrowseButton = New-Object System.Windows.Forms.Button
+$existingFilesBrowseButton.Location = New-Object System.Drawing.Point(678, 444)
+$existingFilesBrowseButton.Size = New-Object System.Drawing.Size(75, 29)
+$existingFilesBrowseButton.Text = '选择…'
+$existingFilesBrowseButton.Add_Click({
+    $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
+    $dialog.Description = '选择同时包含 GameplayConfigSync.dll 和 GameplayConfigSync.json 的目录'
+    if ($dialog.ShowDialog() -eq 'OK') { $existingFilesBox.Text = $dialog.SelectedPath }
+})
+$form.Controls.Add($existingFilesBrowseButton)
+
 $prepareButton = New-Object System.Windows.Forms.Button
-$prepareButton.Location = New-Object System.Drawing.Point(18, 430)
-$prepareButton.Size = New-Object System.Drawing.Size(160, 34)
+$prepareButton.Location = New-Object System.Drawing.Point(18, 488)
+$prepareButton.Size = New-Object System.Drawing.Size(155, 34)
 $prepareButton.Text = '仅编译并准备文件'
-$prepareButton.Add_Click({ Prepare-Upload $false })
+$prepareButton.Add_Click({ Prepare-Upload $false $true })
 $form.Controls.Add($prepareButton)
 
 $uploadButton = New-Object System.Windows.Forms.Button
-$uploadButton.Location = New-Object System.Drawing.Point(190, 430)
-$uploadButton.Size = New-Object System.Drawing.Size(180, 34)
+$uploadButton.Location = New-Object System.Drawing.Point(181, 488)
+$uploadButton.Size = New-Object System.Drawing.Size(165, 34)
 $uploadButton.Text = '编译并更新创意工坊'
-$uploadButton.Add_Click({ Prepare-Upload $true })
+$uploadButton.Add_Click({ Prepare-Upload $true $true })
 $form.Controls.Add($uploadButton)
 
+$existingUploadButton = New-Object System.Windows.Forms.Button
+$existingUploadButton.Location = New-Object System.Drawing.Point(354, 488)
+$existingUploadButton.Size = New-Object System.Drawing.Size(190, 34)
+$existingUploadButton.Text = '上传已有发布文件'
+$existingUploadButton.Add_Click({ Prepare-Upload $true $false })
+$form.Controls.Add($existingUploadButton)
+
 $openButton = New-Object System.Windows.Forms.Button
-$openButton.Location = New-Object System.Drawing.Point(382, 430)
-$openButton.Size = New-Object System.Drawing.Size(160, 34)
+$openButton.Location = New-Object System.Drawing.Point(552, 488)
+$openButton.Size = New-Object System.Drawing.Size(145, 34)
 $openButton.Text = '打开工坊页面'
 $openButton.Add_Click({ Start-Process "https://steamcommunity.com/sharedfiles/filedetails/?id=$workshopItemId" })
 $form.Controls.Add($openButton)
 
 $warningLabel = New-Object System.Windows.Forms.Label
-$warningLabel.Location = New-Object System.Drawing.Point(18, 474)
+$warningLabel.Location = New-Object System.Drawing.Point(18, 532)
 $warningLabel.Size = New-Object System.Drawing.Size(735, 38)
-$warningLabel.Text = '标题和详细描述保持不变。上传始终显式指定现有 Item，不会新建项目，也不会碰游戏 mods 或订阅目录。'
+$warningLabel.Text = '标题和详细描述保持不变。封面留空时复用缓存，首次则用官方默认图。始终更新现有 Item。'
 $form.Controls.Add($warningLabel)
 
 $logBox = New-Object System.Windows.Forms.TextBox
-$logBox.Location = New-Object System.Drawing.Point(18, 518)
+$logBox.Location = New-Object System.Drawing.Point(18, 576)
 $logBox.Size = New-Object System.Drawing.Size(735, 150)
 $logBox.Multiline = $true
 $logBox.ReadOnly = $true
@@ -276,6 +326,7 @@ $form.Controls.Add($logBox)
 
 if ($saved) {
     $previewBox.Text = [string]$saved.previewPath
+    $existingFilesBox.Text = [string]$saved.existingFilesRoot
     $customTagsBox.Text = [string]$saved.customTags
     $baseLibCheck.Checked = [bool]$saved.includeBaseLib
     $savedVisibility = [string]$saved.visibility

@@ -22,8 +22,13 @@ Before uploading:
 
 1. Keep Steam running and signed into the account that owns the Workshop item.
 2. Enter a change note.
-3. Select a PNG preview smaller than 1 MB. The path is remembered locally.
+3. Optionally select a PNG preview smaller than 1 MB. Leaving it blank reuses the
+   cached preview; on first use it falls back to Mega Crit's bundled default.
 4. Review tags and visibility. Title and long description are deliberately left
    unchanged by the tool.
 
 Use **Prepare only** to inspect the staged workspace without uploading.
+
+To upload files downloaded from GitHub Release, select the folder containing
+both `GameplayConfigSync.dll` and `GameplayConfigSync.json`, then use **Upload
+existing release files**. This skips compilation and uploads those exact files.
