@@ -27,7 +27,7 @@ The synchronizer's own `GameplayConfigSync` settings are explicitly excluded fro
 - `Enabled`: master switch.
 - `DryRun`: validate and log snapshots without applying values.
 - `Diagnostics`: normal or verbose structured logging.
-- `FileLogging`: write a dedicated UTF-8 log with 2 MiB size rotation and five archives; enabled by default.
+- `FileLogging`: write one dedicated UTF-8 log per game launch; enabled by default.
 - `AllowUnsafeRitsuBindings`: opt in to RitsuLib bindings whose persistence behavior cannot be proven safe; disabled by default.
 
 RitsuLib currently exposes no general public way to write a value temporarily without persisting it. The default is therefore fail-closed: transient bindings and the known autosave compatibility adapter are accepted; unknown binding implementations are skipped unless the unsafe opt-in is enabled.
@@ -45,7 +45,7 @@ Search `logs/godot.log` on both peers for `GCS|`. Match the same `request=` valu
 
 The `sha256=` prefix must match on host and client. Logs include identities and counts, not raw configuration values.
 
-The same events are written to `user://GameplayConfigSync/logs/gameplay-config-sync.log` when `FileLogging=true`. Each line has UTC time, a monotonic sequence number, severity, and an event code. Files rotate at 2 MiB and retain five archives.
+The same events are written to `user://GameplayConfigSync/logs/gameplay-config-sync-YYYYMMDD-HHmmss.log` when `FileLogging=true`. The filename and each line's `time=` field use local time with its UTC offset; every line also contains a monotonic sequence number, severity, and event code.
 
 For a one-sided test, expect `CAPABILITY_MISSING` and `REQUEST_SKIPPED`, with no `REQUEST_SEND` or snapshot events.
 

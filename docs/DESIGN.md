@@ -27,7 +27,7 @@ No BaseLib private message dictionary, private handler method, or private `Confi
 
 ## Structured log protocol
 
-Every diagnostic line contains `GCS|utc=<ISO-8601>|seq=<n>|level=<level>|event=<code>|...`. It goes to both the game log and, by default, a dedicated 2 MiB rotating log with five archives. Important codes:
+Every diagnostic line contains `GCS|time=<local ISO-8601 with offset>|seq=<n>|level=<level>|event=<code>|...`. It goes to both the game log and, by default, a dedicated log file for each game launch. Important codes:
 
 - `INIT_OK`
 - `CAPABILITY_ATTACH`, `CAPABILITY_OK`, `CAPABILITY_MISSING`, `CAPABILITY_INVALID`, `CAPABILITY_INCOMPATIBLE`

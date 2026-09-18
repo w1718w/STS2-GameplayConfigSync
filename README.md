@@ -27,7 +27,7 @@
 - `Enabled`：总开关。
 - `DryRun`：只校验并记录快照，不实际应用取值。
 - `Diagnostics`：普通或详细的结构化日志。
-- `FileLogging`：写入独立的 UTF-8 日志，按 2 MiB 轮转、保留五个归档；默认开启。
+- `FileLogging`：每次游戏启动写入一个独立的 UTF-8 日志；默认开启。
 - `AllowUnsafeRitsuBindings`：允许使用持久化行为无法被证明安全的 RitsuLib 绑定；默认关闭。
 
 RitsuLib 目前并未提供"临时写入且不持久化"的通用公开操作。因此默认采取 fail-closed（失败即关闭）策略：临时绑定与已知的自动存档兼容适配器会被接受；未知的绑定实现会被跳过，除非启用上述不安全选项。
@@ -45,7 +45,7 @@ RitsuLib 目前并未提供"临时写入且不持久化"的通用公开操作。
 
 主机与客户端的 `sha256=` 前缀必须一致。日志只记录标识与计数，不记录原始配置取值。
 
-当 `FileLogging=true` 时，同样的事件也会写入 `user://GameplayConfigSync/logs/gameplay-config-sync.log`。每行包含 UTC 时间、单调递增序号、严重级别与事件代码。文件在 2 MiB 时轮转，保留五个归档。
+当 `FileLogging=true` 时，同样的事件也会写入 `user://GameplayConfigSync/logs/gameplay-config-sync-YYYYMMDD-HHmmss.log`。文件名和每行的 `time=` 均使用带时区偏移的本地时间；每行还包含单调递增序号、严重级别与事件代码。
 
 若进行单侧测试，应看到 `CAPABILITY_MISSING` 与 `REQUEST_SKIPPED`，且不出现 `REQUEST_SEND` 或任何快照事件。
 
