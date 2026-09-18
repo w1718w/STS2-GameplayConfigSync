@@ -19,6 +19,7 @@ GameplayConfigSync is a local Slay the Spire 2 DLL mod. In multiplayer it tempor
 - `docs/DESIGN.md` — safety contract, compatibility boundaries, and multiplayer acceptance matrix
 - `docs/RESEARCH.md` — version-specific research evidence
 - `.github/workflows/` — build and release validation
+- `scripts/WorkshopUploader.ps1` — local GUI wrapper around Mega Crit's official Steam Workshop uploader
 
 Build output is intentionally nested:
 
@@ -113,7 +114,12 @@ git tag vX.Y.Z
 git push origin main vX.Y.Z
 ```
 
-The release workflow validates the tag against the manifest, builds the package, and publishes files from `dist/GameplayConfigSync/`. Steam Workshop upload remains a manual in-game step.
+The release workflow validates the tag against the manifest, builds the package, and publishes files from `dist/GameplayConfigSync/`.
+
+Steam Workshop upload is a local, user-confirmed step through `scripts/OpenWorkshopUploader.cmd`.
+The wrapper always targets the existing item ID and never writes to the game's
+`mods` or subscription directories. Do not automate Steam credentials or commit
+the generated workspace from `../workshop-upload/`.
 
 ## Definition of done
 
