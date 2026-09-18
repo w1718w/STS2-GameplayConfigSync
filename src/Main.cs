@@ -64,8 +64,8 @@ internal static class SyncLog
 {
     private static readonly MegaCrit.Sts2.Core.Logging.Logger Logger = new(Main.ModId, LogType.Generic);
     private static readonly object FileLock = new();
-    private const long MaxLogBytes = 2 * 1024 * 1024;
-    private const int ArchiveCount = 5;
+    private static readonly DateTimeOffset SessionStartedAt = DateTimeOffset.Now;
+    private static string? _sessionLogPath;
     private static long _sequence;
 
     public static void Info(string code, string message) => Write("INFO", code, message);
@@ -82,7 +82,7 @@ internal static class SyncLog
 
     private static void Write(string level, string code, string message)
     {
-        string line = $"GCS|utc={DateTime.UtcNow:O}|seq={System.Threading.Interlocked.Increment(ref _sequence)}|" +
+        string line = $"GCS|time={DateTimeOffset.Now:O}|seq={System.Threading.Interlocked.Increment(ref _sequence)}|" +
             $"level={level}|event={code}|{message}";
         if (level == "ERROR") Logger.Error(line);
         else if (level == "WARN") Logger.Warn(line);
@@ -94,11 +94,7 @@ internal static class SyncLog
         {
             lock (FileLock)
             {
-                string directory = Path.Combine(GodotOS.GetUserDataDir(), Main.ModId, "logs");
-                Directory.CreateDirectory(directory);
-                string path = Path.Combine(directory, "gameplay-config-sync.log");
-                RotateIfNeeded(path);
-                File.AppendAllText(path, line + Environment.NewLine, Encoding.UTF8);
+                File.AppendAllText(GetSessionLogPath(), line + Environment.NewLine, Encoding.UTF8);
             }
         }
         catch
@@ -107,18 +103,16 @@ internal static class SyncLog
         }
     }
 
-    private static void RotateIfNeeded(string path)
+    private static string GetSessionLogPath()
     {
-        if (!File.Exists(path) || new FileInfo(path).Length < MaxLogBytes)
-            return;
-        string oldest = path + "." + ArchiveCount;
-        if (File.Exists(oldest)) File.Delete(oldest);
-        for (int i = ArchiveCount - 1; i >= 1; i--)
-        {
-            string source = path + "." + i;
-            if (File.Exists(source)) File.Move(source, path + "." + (i + 1), true);
-        }
-        File.Move(path, path + ".1", true);
+        if (_sessionLogPath is not null)
+            return _sessionLogPath;
+
+        string directory = Path.Combine(GodotOS.GetUserDataDir(), Main.ModId, "logs");
+        Directory.CreateDirectory(directory);
+        _sessionLogPath = Path.Combine(directory,
+            $"gameplay-config-sync-{SessionStartedAt:yyyyMMdd-HHmmss}.log");
+        return _sessionLogPath;
     }
 }
 
