@@ -842,9 +842,30 @@ internal static class StartLobbyClientPatch
 [HarmonyPatch]
 internal static class LoadLobbyConstructorPatch
 {
+    // LoadRunLobby 有两个构造函数，其中接收 ClientLoadJoinResponseMessage 的那个会链式
+    // 调用另一个。此处把该类型的全部构造函数都挂上了补丁，因此「客户端加入已保存的对局」
+    // 时，一次对象创建会触发两次 Postfix（同一实例、相隔不到一毫秒）。
+    // 结果是重复的 SESSION_ATTACH，以及双端时重复的请求。
+    //
+    // 一个实例的构造过程只会发生一次，所以按实例去重即可精确消掉这次重复，不会误伤
+    // 其它合法的重复挂载路径。用弱引用持有，避免延长该大厅对象的生命周期。
+    private static WeakReference<LoadRunLobby>? _lastConstructed;
+
     private static IEnumerable<MethodBase> TargetMethods() => typeof(LoadRunLobby).GetConstructors();
-    private static void Postfix(LoadRunLobby __instance) =>
+
+    private static void Postfix(LoadRunLobby __instance)
+    {
+        if (_lastConstructed is not null &&
+            _lastConstructed.TryGetTarget(out LoadRunLobby? previous) &&
+            ReferenceEquals(previous, __instance))
+        {
+            SyncLog.Verbose("ATTACH_SKIPPED", "reason=duplicate_constructor");
+            return;
+        }
+
+        _lastConstructed = new WeakReference<LoadRunLobby>(__instance);
         ConfigSyncSession.Attach(__instance.NetService, __instance.NetService.Type == NetGameType.Client);
+    }
 }
 
 [HarmonyPatch(typeof(StartRunLobby), "BeginRunLocally")]

@@ -9,6 +9,22 @@
 <!-- git-cliff: end of header -->
 ## [未发布]
 
+### 修复
+
+- 消除 LoadRunLobby 构造函数链导致的重复挂载（[b1d57cb](https://github.com/w1718w/STS2-GameplayConfigSync/commit/b1d57cba79d48acbc69bfc8c0d42fec2542a81d8)）
+
+### 构建
+
+- 产物改为嵌套目录，与 mods/ 安装结构一致（[9187d0e](https://github.com/w1718w/STS2-GameplayConfigSync/commit/9187d0eeea7d73177c4a68daec320021fc772263)）
+
+### 文档
+
+- 更新构建产物的路径说明（[bafdf85](https://github.com/w1718w/STS2-GameplayConfigSync/commit/bafdf85d48ef282a5c120747812a423ea1df97dd)）
+- 加入 AGENTS.md 与 CLAUDE.md 导入入口（[60547c6](https://github.com/w1718w/STS2-GameplayConfigSync/commit/60547c65c8a079921a44bbf68411ff68ced78c64)）
+- 仓库结构中登记 AGENTS.md（[203a68a](https://github.com/w1718w/STS2-GameplayConfigSync/commit/203a68a0d1f508dbb5eb9b38a1eee4f14d1f65fd)）
+
+## [未发布]
+
 ### 构建
 
 - 产物改为嵌套目录，与 mods/ 安装结构一致（[9187d0e](https://github.com/w1718w/STS2-GameplayConfigSync/commit/9187d0eeea7d73177c4a68daec320021fc772263)）
