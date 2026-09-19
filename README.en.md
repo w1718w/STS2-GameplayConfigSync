@@ -59,6 +59,7 @@ See the [research notes](docs/RESEARCH.md) for the evidence / source inventory a
 - `.github/workflows/` — builds on push, publishes on tag.
 - `cliff.toml` — changelog generation config.
 - `docs/` — design, safety, research, and test notes.
+- `tools/GameplayConfigSync.ContractChecks/` — Harmony IL contract checker that runs without launching the game.
 - `AGENTS.md` — repository instructions for AI coding agents: build mechanics, hard rules, release flow.
 - `dist/GameplayConfigSync/` — build output; intentionally excluded from Git.
 
@@ -67,6 +68,8 @@ See the [research notes](docs/RESEARCH.md) for the evidence / source inventory a
 ```
 dotnet build -c Release
 ```
+
+The build automatically runs `tools/GameplayConfigSync.ContractChecks`. Its IL analysis verifies that Harmony targets exist, `__instance` types match, and an instance-method patch cannot reach the target type's static `Instance` property. It does not start the game, and a violation fails the build.
 
 The output lands in `dist/GameplayConfigSync/` as `GameplayConfigSync.dll` and `GameplayConfigSync.json`. Copy that whole folder into the game's `mods/` directory; the result is `mods/GameplayConfigSync/`.
 

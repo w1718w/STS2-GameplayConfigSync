@@ -41,6 +41,15 @@
       <PrivateAssets>all</PrivateAssets>
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
+
+    <ProjectReference Include="tools/GameplayConfigSync.ContractChecks/GameplayConfigSync.ContractChecks.csproj"
+                      ReferenceOutputAssembly="false"
+                      PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- 工具源码属于独立项目，不能编进 Mod DLL。 -->
+  <ItemGroup>
+    <Compile Remove="tools/**/*.cs" />
   </ItemGroup>
 
   <!-- 本地开发：优先引用游戏安装目录里的真实 DLL。 -->
@@ -77,6 +86,15 @@
       <_PackagedFile Include="$(ModDistDir)*" />
     </ItemGroup>
     <Message Importance="high" Text="已打包: @(_PackagedFile->'%(Filename)%(Extension)')" />
+  </Target>
+
+  <Target Name="CheckHarmonyContracts" AfterTargets="PackageMod">
+    <ItemGroup>
+      <_Sts2Reference Include="@(ReferencePath)" Condition="'%(Filename)' == 'sts2'" />
+    </ItemGroup>
+    <Error Condition="'@(_Sts2Reference)' == ''"
+           Text="无法定位 sts2.dll，不能执行 Harmony 契约检查。" />
+    <Exec Command="dotnet &quot;$(MSBuildProjectDirectory)/tools/GameplayConfigSync.ContractChecks/bin/$(Configuration)/net9.0/GameplayConfigSync.ContractChecks.dll&quot; &quot;$(TargetPath)&quot; &quot;@(_Sts2Reference)&quot;" />
   </Target>
 
 </Project>

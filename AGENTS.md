@@ -18,6 +18,7 @@ GameplayConfigSync is a local Slay the Spire 2 DLL mod. In multiplayer it tempor
 - `Directory.Build.props` — local game assembly path and CI fallback selection
 - `docs/DESIGN.md` — safety contract, compatibility boundaries, and multiplayer acceptance matrix
 - `docs/RESEARCH.md` — version-specific research evidence
+- `tools/GameplayConfigSync.ContractChecks/` — build-integrated IL checks for Harmony target and instance-lifecycle contracts
 - `.github/workflows/` — build and release validation
 
 Build output is intentionally nested:
@@ -39,6 +40,7 @@ dotnet build -c Release
 There is currently no unit-test project or linter. A successful change requires validation proportional to its scope:
 
 1. Run `dotnet build -c Release` with zero errors.
+   This automatically runs the Harmony IL contract checker. With a real game assembly it validates every target strictly; metadata-only CI references may report `GCSH102` for omitted private members.
 2. Confirm `dist/GameplayConfigSync/` contains only the mod DLL and manifest.
 3. For networking, lifecycle, configuration, or Harmony changes, run the relevant two-peer scenarios from `docs/DESIGN.md`.
 4. Correlate host/client events by `request=` and verify matching `sha256=` values.
