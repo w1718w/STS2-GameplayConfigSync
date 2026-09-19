@@ -3,7 +3,7 @@
   "name": "Gameplay Config Sync / 联机玩法配置同步",
   "author": "WANGao + Codex",
   "description": "Temporarily mirrors only other gameplay mods' registered configuration when both peers advertise a compatible protocol; remains inert when installed on one side only.",
-  "version": "0.4.0-beta.1",
+  "version": "0.4.0-beta.2",
   "has_pck": false,
   "has_dll": true,
   "affects_gameplay": false,

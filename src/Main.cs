@@ -10,7 +10,7 @@ namespace GameplayConfigSync;
 public static class Main
 {
     public const string ModId = "GameplayConfigSync";
-    public const string Version = "0.4.0-beta.1";
+    public const string Version = "0.4.0-beta.2";
     private static bool _initialized;
 
     public static void Initialize()

@@ -57,14 +57,14 @@ internal static class ConfigLocalization
         ["GAMEPLAYCONFIGSYNC-ALLOW_UNSAFE_RITSU_BINDINGS.hover.desc"] = "允许同步无法确认持久化行为是否安全的 RitsuLib 设置；默认关闭。"
     };
 
-    public static void Apply()
+    public static void Apply(LocManager locManager)
     {
         try
         {
-            Dictionary<string, string> entries = LocManager.Instance.Language == "zhs"
+            Dictionary<string, string> entries = locManager.Language == "zhs"
                 ? SimplifiedChinese
                 : English;
-            LocManager.Instance.GetTable("settings_ui").MergeWith(entries);
+            locManager.GetTable("settings_ui").MergeWith(entries);
         }
         catch (KeyNotFoundException)
         {
@@ -76,11 +76,11 @@ internal static class ConfigLocalization
 [HarmonyPatch(typeof(LocManager), nameof(LocManager.Initialize))]
 internal static class ConfigLocalizationInitializePatch
 {
-    private static void Postfix() => ConfigLocalization.Apply();
+    private static void Postfix() => ConfigLocalization.Apply(LocManager.Instance);
 }
 
 [HarmonyPatch(typeof(LocManager), nameof(LocManager.SetLanguage))]
 internal static class ConfigLocalizationLanguagePatch
 {
-    private static void Postfix() => ConfigLocalization.Apply();
+    private static void Postfix(LocManager __instance) => ConfigLocalization.Apply(__instance);
 }
